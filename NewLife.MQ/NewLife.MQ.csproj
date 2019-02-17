@@ -27,19 +27,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Controllers\ClientController.cs" />
-    <Compile Remove="Controllers\MessageController.cs" />
-    <Compile Remove="Controllers\TopicController.cs" />
-    <Compile Remove="Controllers\UserController.cs" />
     <Compile Remove="MQServer.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="NewLife.Core" Version="8.0.6965.42074" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Controllers\" />
   </ItemGroup>
 
 </Project>
