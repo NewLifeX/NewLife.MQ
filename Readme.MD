@@ -66,6 +66,7 @@ static async Task OnMessage(Subscriber sb, Message m)
 | [NewLife.MySql](https://github.com/NewLifeX/NewLife.MySql) | 2018 | 开发中 | √ | MySql驱动 |
 | [NewLife.Cache](https://github.com/NewLifeX/NewLife.Cache) | 2018 | 维护中 | √ | 自定义缓存服务器 |
 | [NewLife.RocketMQ](https://github.com/NewLifeX/NewLife.RocketMQ) | 2018 | 维护中 | √ | 支持Apache RocketMQ和阿里云消息队列 |
+| [NewLife.MQ](https://github.com/NewLifeX/NewLife.MQ) | 2019 | 开发中 | √ | 轻量级消息队列 |
 | NewLife.Kafka | 2019 | 设计中 | √ | Kafka组件 |
 | ConfigServer | 2019 | 设计中 | √ | 分布式配置中心，学习Apollo |
 | [X组件 .NET2.0](https://github.com/NewLifeX/X_NET20) | 2002 | 存档中 | .NET2.0 | 日志、网络、RPC、序列化、缓存、Windows服务、多线程 |
