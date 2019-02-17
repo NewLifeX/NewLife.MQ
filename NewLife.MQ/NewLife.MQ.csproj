@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+    <AssemblyName>NewLife.MQ</AssemblyName>
+    <AssemblyTitle>轻量级消息队列</AssemblyTitle>
+    <Description>轻量级消息队列，无延迟分发，支持消费组和消息去重，不支持集群部署</Description>
+    <Copyright>版权所有(C) 新生命开发团队 2002~2019</Copyright>
+    <Company>新生命开发团队</Company>
+    <Deterministic>false</Deterministic>
+    <AssemblyVersion>1.0.*</AssemblyVersion>
+    <Version>1.0.2019.0217</Version>
+    <FileVersion>1.0.2019.0217</FileVersion>
+    <RootNamespace>NewLife.MQ</RootNamespace>
+    <RepositoryUrl>https://github.com/NewLifeX/NewLife.MQ</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <OutputPath>..\Bin</OutputPath>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net45|AnyCPU'">
+    <DocumentationFile>..\Bin\NewLife.MQ.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net45|AnyCPU'">
+    <DocumentationFile>..\Bin\NewLife.MQ.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Controllers\TopicController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NewLife.Core" Version="8.0.6965.42074" />
+  </ItemGroup>
+
+</Project>
