@@ -11,7 +11,7 @@
     <AssemblyVersion>1.0.*</AssemblyVersion>
     <Version>1.0.2019.0217</Version>
     <FileVersion>1.0.2019.0217</FileVersion>
-    <RootNamespace>NewLife.MQ</RootNamespace>
+    <RootNamespace>NewLife.MessageQueue</RootNamespace>
     <RepositoryUrl>https://github.com/NewLifeX/NewLife.MQ</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <OutputPath>..\Bin</OutputPath>
@@ -27,11 +27,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\ClientController.cs" />
+    <Compile Remove="Controllers\MessageController.cs" />
     <Compile Remove="Controllers\TopicController.cs" />
+    <Compile Remove="Controllers\UserController.cs" />
+    <Compile Remove="MQServer.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="NewLife.Core" Version="8.0.6965.42074" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Controllers\" />
   </ItemGroup>
 
 </Project>

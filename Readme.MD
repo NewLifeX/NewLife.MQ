@@ -1,5 +1,8 @@
 ## 消息队列 NewLife.MQ
-NewLife.MQ 是一个消息队列组件，可提供广播和集群两大消费模式。  
+NewLife.MQ 是一个轻量级消息队列，无延迟分发，支持消费组和消息去重，不支持集群部署。  
+
+主要特点：  
++ 轻量级。服务端和客户端都是通过`nuget`引用`NewLife.MQ`即可，也可以在Windows上直接安装发行版`NewLife.MQServer`。  
 
 ```csharp
 public static async Task Main2()
