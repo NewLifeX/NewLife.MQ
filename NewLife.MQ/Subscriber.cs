@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-#if !NET4
-using TaskEx = System.Threading.Tasks.Task;
-#endif
 
 namespace NewLife.MessageQueue
 {
@@ -47,17 +44,11 @@ namespace NewLife.MessageQueue
         /// <summary>是否匹配该订阅者</summary>
         /// <param name="msg"></param>
         /// <returns></returns>
-        public Boolean IsMatch(Message msg)
-        {
-            return Tags == null || msg.Tag == null || Tags.Contains(msg.Tag);
-        }
+        public Boolean IsMatch(Message msg) => Tags == null || msg.Tag == null || Tags.Contains(msg.Tag);
 
         /// <summary>发送消息给订阅者</summary>
         /// <param name="msg"></param>
         /// <returns></returns>
-        public async Task NoitfyAsync(Message msg)
-        {
-            await TaskEx.Run(() => OnMessage(this, msg));
-        }
+        public async Task NoitfyAsync(Message msg) => await Task.Run(() => OnMessage(this, msg));
     }
 }

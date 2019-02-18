@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Threading;
 using NewLife.Log;
 using NewLife.MessageQueue;
+using NewLife.Security;
 
 namespace Test
 {
@@ -35,6 +37,14 @@ namespace Test
 
             var msgid = await client.Public("发布测试");
             XTrace.WriteLine("msgid={0}", msgid);
+
+            for (var i = 0; i < 10; i++)
+            {
+                Thread.Sleep(1000);
+
+                msgid = await client.Public(Rand.NextString(16));
+                XTrace.WriteLine("msgid={0}", msgid);
+            }
         }
 
         static void Test2()

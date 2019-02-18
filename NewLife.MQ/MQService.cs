@@ -1,7 +1,6 @@
 ﻿using System;
 using NewLife.Data;
 using NewLife.Log;
-using NewLife.Model;
 using NewLife.Net;
 using NewLife.Remoting;
 using NewLife.Serialization;
@@ -140,40 +139,15 @@ namespace NewLife.MessageQueue
             var msg = json.ToJsonEntity<Message>();
             msg.Body = body;
 
+            var user = Session["User"] as String;
+            msg.Sender = user;
+
             XTrace.WriteLine("发布消息 {0}", msg);
 
-            var user = Session["user"] as String;
-
-            var tp = Session["Topic"] as Topic;
-            if (tp == null) throw new Exception("未订阅");
-
-            msg.Sender = user;
+            var tp = Host.Get(msg.Topic, true);
             tp.Send(msg);
 
             return msg.ID;
-        }
-
-        /// <summary>订阅</summary>
-        /// <param name="topic">主题。沟通生产者消费者之间的桥梁</param>
-        /// <param name="tag">标签。消费者用于在主题队列内部过滤消息</param>
-        /// <returns></returns>
-        public Boolean Subscribe(String topic, String tag)
-        {
-            XTrace.WriteLine("订阅主题 {0} @{1}", topic, Session["user"]);
-
-            var tp = Host.Subscribe(null, topic, tag, null);
-
-            var user = Session["User"] as IManageUser;
-
-            // 退订旧的
-            var old = Session["Topic"] as Topic;
-            //if (old != null) old.Remove(user);
-
-            // 订阅新的
-            Session["Topic"] = tp;
-            //tp.Add(user, Session);
-
-            return true;
         }
         #endregion
 

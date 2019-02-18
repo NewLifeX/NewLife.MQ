@@ -41,7 +41,7 @@ namespace NewLife.MessageQueue
         /// <param name="topic">主题</param>
         /// <param name="create">是否创建</param>
         /// <returns></returns>
-        private Topic Get(String topic, Boolean create)
+        public Topic Get(String topic, Boolean create)
         {
             if (create)
             {
@@ -55,79 +55,6 @@ namespace NewLife.MessageQueue
             Topics.TryGetValue(topic, out var tp);
 
             return tp;
-        }
-        #endregion
-
-        #region 订阅管理
-        /// <summary>订阅主题</summary>
-        /// <param name="user">消费者</param>
-        /// <param name="topic">主题。沟通生产者消费者之间的桥梁</param>
-        /// <param name="tag">标签。消费者用于在主题队列内部过滤消息</param>
-        /// <param name="onMessage">消费消息的回调函数</param>
-        /// <param name="userState">订阅者</param>
-        /// <returns></returns>
-        [DisplayName("订阅主题")]
-        public Topic Subscribe(String user, String topic, String tag, Func<Subscriber, Message, Task> onMessage, Object userState = null)
-        {
-            if (user.IsNullOrEmpty()) throw new ArgumentNullException(nameof(user));
-            if (topic.IsNullOrEmpty()) throw new ArgumentNullException(nameof(topic));
-            if (onMessage == null) throw new ArgumentNullException(nameof(onMessage));
-
-            var tp = Get(topic, true);
-            if (tp != null)
-            {
-                WriteLog("{0}订阅（{1}, {2}）", user, topic, tag);
-
-                //var rs = tp.Add(user, tag, onMessage, userState);
-                //// 提示其它订阅者
-                //if (rs && Tip)
-                //{
-                //    var msg = new Message
-                //    {
-                //        Sender = user,
-                //        Topic = topic,
-                //        Tag = "Subscribe",
-                //        Body = "订阅主题",
-                //    };
-                //    tp.Send(msg);
-                //}
-            }
-            return tp;
-        }
-
-        /// <summary>取消订阅</summary>
-        /// <param name="user">订阅者</param>
-        /// <param name="topic">主题。沟通生产者消费者之间的桥梁</param>
-        /// <param name="userState">订阅者</param>
-        [DisplayName("取消订阅")]
-        public void Unsubscribe(String user, String topic, Object userState)
-        {
-            if (user.IsNullOrEmpty()) throw new ArgumentNullException(nameof(user));
-
-            if (!topic.IsNullOrEmpty())
-            {
-                WriteLog("{0}取消订阅（{1}）", user, topic);
-
-                var tp = Get(topic, false);
-                if (tp != null)
-                {
-                    var rs = tp.Remove(user, userState);
-                    // 提示其它订阅者
-                    if (rs && Tip) Send(user, topic, "Unsubscribe", "取消订阅");
-                }
-            }
-            // 取消当前用户的所有订阅
-            else
-            {
-                WriteLog("{0}取消所有{1}个订阅", user, Topics.Count);
-
-                foreach (var item in Topics.Values)
-                {
-                    var rs = item.Remove(user, userState);
-                    // 提示其它订阅者
-                    if (rs && Tip) Send(user, topic, "Unsubscribe", "取消订阅");
-                }
-            }
         }
         #endregion
 
@@ -168,10 +95,7 @@ namespace NewLife.MessageQueue
         /// <summary>写日志</summary>
         /// <param name="format"></param>
         /// <param name="args"></param>
-        public void WriteLog(String format, params Object[] args)
-        {
-            Log?.Info(Name + " " + format, args);
-        }
+        public void WriteLog(String format, params Object[] args) => Log?.Info(Name + " " + format, args);
         #endregion
     }
 }
