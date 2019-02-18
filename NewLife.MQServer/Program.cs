@@ -41,6 +41,9 @@ namespace NewLife.MQServer
             // 注册服务
             svr.Register<MQService>();
 
+            MQService.Host = MQHost.Instance;
+            MQService.Log = XTrace.Log;
+
             svr.Start();
 
             _Server = svr;

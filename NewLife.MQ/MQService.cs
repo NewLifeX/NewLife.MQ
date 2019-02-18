@@ -1,13 +1,13 @@
 ﻿using System;
-using System.ComponentModel;
 using NewLife.Log;
 using NewLife.Model;
+using NewLife.Net;
 using NewLife.Remoting;
 
 namespace NewLife.MessageQueue
 {
     /// <summary>消息队列服务</summary>
-    public class MQService : IApi
+    public class MQService : IApi, IActionFilter
     {
         #region 属性
         /// <summary>主机</summary>
@@ -17,19 +17,126 @@ namespace NewLife.MessageQueue
         public IApiSession Session { get; set; }
         #endregion
 
-        /// <summary>登录</summary>
-        /// <param name="user"></param>
+        #region 登录
+        /// <summary>
+        /// 传入应用名和密钥登陆，
+        /// 返回应用名和应用显示名
+        /// </summary>
+        /// <param name="user">应用名</param>
         /// <param name="pass"></param>
         /// <returns></returns>
-        [DisplayName("登录")]
-        public Boolean Login(String user, String pass)
+        [Api(nameof(Login))]
+        public Object Login(String user, String pass)
         {
-            XTrace.WriteLine("登录 {0}/{1}", user, pass);
+            if (user.IsNullOrEmpty()) throw new ArgumentNullException(nameof(user));
+            if (pass.IsNullOrEmpty()) throw new ArgumentNullException(nameof(pass));
 
-            if (pass != user.MD5()) throw new Exception("密码不正确");
+            var ns = Session as INetSession;
+            var ip = ns.Remote.Host;
+            var ps = ControllerContext.Current.Parameters;
 
-            // 记录已登录用户
-            Session["user"] = user;
+            WriteLog("[{0}]从[{1}]登录", user, ns.Remote);
+
+            //// 找应用
+            //var app = App.FindByName(user);
+            //if (app == null || app.Secret.IsNullOrEmpty())
+            //{
+            //    if (app == null) app = new App();
+
+            //    if (app.ID == 0)
+            //    {
+            //        app.Name = user;
+            //        //app.Secret = pass;
+            //        app.CreateIP = ip;
+            //        app.CreateTime = DateTime.Now;
+            //        app.Enable = true;
+            //    }
+
+            //    var name = ps["name"] + "";
+            //    if (!name.IsNullOrEmpty()) app.DisplayName = name;
+
+            //    app.UpdateIP = ip;
+            //    app.UpdateTime = DateTime.Now;
+
+            //    app.Save();
+            //}
+
+            //if (!app.Enable) throw new Exception("已禁用！");
+
+            //// 核对密码
+            //if (!app.Secret.IsNullOrEmpty())
+            //{
+            //    var pass2 = app.Secret.MD5();
+            //    if (pass != pass2) throw new Exception("密码错误！");
+            //}
+
+            //// 应用上线
+            //CreateOnline(app, ns, ps);
+
+            //app.LastIP = ip;
+            //app.LastLogin = DateTime.Now;
+            //app.Save();
+
+            // 记录当前用户
+            //Session["App"] = app;
+            Session["User"] = user;
+
+            //return new
+            //{
+            //    app.Name,
+            //    app.DisplayName,
+            //};
+
+            return new { Name = user };
+        }
+
+        void IActionFilter.OnActionExecuting(ControllerContext filterContext)
+        {
+            var act = filterContext.ActionName;
+            if (act == nameof(Login)) return;
+
+            if (Session["User"] is String app)
+            {
+                //var online = GetOnline(app, Session as INetSession);
+                //online.UpdateTime = DateTime.Now;
+                //online.SaveAsync();
+            }
+            else
+            {
+                var ns = Session as INetSession;
+                throw new ApiException(401, "{0}未登录！不能执行{1}".F(ns.Remote, act));
+            }
+        }
+
+        void IActionFilter.OnActionExecuted(ControllerContext filterContext)
+        {
+            var ex = filterContext.Exception;
+            if (ex != null && !filterContext.ExceptionHandled)
+            {
+                // 显示错误
+                if (ex is ApiException)
+                    XTrace.Log.Error(ex.Message);
+                else
+                    XTrace.WriteException(ex);
+            }
+        }
+        #endregion
+
+        #region 发布订阅
+        /// <summary>发布消息</summary>
+        /// <param name="msg"></param>
+        /// <returns></returns>
+        public Boolean Public(Message msg)
+        {
+            XTrace.WriteLine("发布消息 {0}", msg);
+
+            var user = Session["user"] as String;
+
+            var tp = Session["Topic"] as Topic;
+            if (tp == null) throw new Exception("未订阅");
+
+            msg.Sender = user;
+            tp.Send(msg);
 
             return true;
         }
@@ -38,7 +145,6 @@ namespace NewLife.MessageQueue
         /// <param name="topic">主题。沟通生产者消费者之间的桥梁</param>
         /// <param name="tag">标签。消费者用于在主题队列内部过滤消息</param>
         /// <returns></returns>
-        [DisplayName("订阅主题")]
         public Boolean Subscribe(String topic, String tag)
         {
             XTrace.WriteLine("订阅主题 {0} @{1}", topic, Session["user"]);
@@ -57,24 +163,16 @@ namespace NewLife.MessageQueue
 
             return true;
         }
+        #endregion
 
-        /// <summary>发布消息</summary>
-        /// <param name="msg"></param>
-        /// <returns></returns>
-        [DisplayName("发布消息")]
-        public Boolean Public(Message msg)
-        {
-            XTrace.WriteLine("发布消息 {0}", msg);
+        #region 日志
+        /// <summary>日志</summary>
+        public static ILog Log { get; set; }
 
-            var user = Session["user"] as String;
-
-            var tp = Session["Topic"] as Topic;
-            if (tp == null) throw new Exception("未订阅");
-
-            msg.Sender = user;
-            tp.Send(msg);
-
-            return true;
-        }
+        /// <summary>写日志</summary>
+        /// <param name="format"></param>
+        /// <param name="args"></param>
+        public static void WriteLog(String format, params Object[] args) => Log?.Info(format, args);
+        #endregion
     }
 }
