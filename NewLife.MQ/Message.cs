@@ -58,6 +58,8 @@ namespace NewLife.MessageQueue
             var len2 = reader.ReadInt16();
             msg.Body = data.Slice(2 + len + 2, len2);
 
+            reader.BaseStream.Seek(len2, SeekOrigin.Current);
+
             return msg;
         }
 

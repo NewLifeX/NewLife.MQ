@@ -3,6 +3,7 @@ using NewLife.Data;
 using NewLife.Log;
 using NewLife.Net;
 using NewLife.Remoting;
+using NewLife.Security;
 
 namespace NewLife.MessageQueue
 {
@@ -144,7 +145,7 @@ namespace NewLife.MessageQueue
             return msg.ID;
         }
 
-        /// <summary>拉取消息</summary>
+        /// <summary>长连接拉取消息</summary>
         /// <param name="offset"></param>
         /// <param name="maxNums"></param>
         /// <param name="msTimeout"></param>
@@ -152,7 +153,24 @@ namespace NewLife.MessageQueue
         [Api(nameof(Pull))]
         public Packet Pull(Int64 offset, Int32 maxNums, Int32 msTimeout)
         {
-            return null;
+            //todo 待填充拉取消息
+            var list = new Message[16];
+            for (var i = 0; i < list.Length; i++)
+            {
+                list[i] = new Message { BodyString = Rand.NextString(16) };
+            }
+
+            // 写入个数后，链式输出
+            var count = (Int16)list.Length;
+            var pk = new Packet(count.GetBytes());
+
+            foreach (var item in list)
+            {
+                var pk2 = item.ToPacket();
+                pk.Append(pk2);
+            }
+
+            return pk;
         }
         #endregion
 

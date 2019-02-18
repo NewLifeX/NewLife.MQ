@@ -40,11 +40,14 @@ namespace Test
 
             for (var i = 0; i < 10; i++)
             {
-                Thread.Sleep(1000);
+                Thread.Sleep(200);
 
                 msgid = await client.Public(Rand.NextString(16));
                 XTrace.WriteLine("msgid={0}", msgid);
             }
+
+            var msgs = await client.Pull(0, 32, 15_000);
+            Console.WriteLine(msgs);
         }
 
         static void Test2()

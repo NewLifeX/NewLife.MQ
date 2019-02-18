@@ -119,6 +119,7 @@ namespace NewLife.MessageQueue
         /// <summary>拉取的批大小。默认32</summary>
         public Int32 BatchSize { get; set; } = 32;
 
+        /// <summary>消费事件</summary>
         public event EventHandler<EventArgs> OnConsume;
 
         public async Task<Message[]> Pull(Int64 offset, Int32 maxNums, Int32 msTimeout)
@@ -134,11 +135,11 @@ namespace NewLife.MessageQueue
             while (count-- > 0)
             {
                 var pk2 = pk.Slice((Int32)ms.Position);
-                var msg = Message.Read(pk, reader);
+                var msg = Message.Read(pk2, reader);
                 list.Add(msg);
             }
 
-            return null;
+            return list.ToArray();
         }
         #endregion
     }
