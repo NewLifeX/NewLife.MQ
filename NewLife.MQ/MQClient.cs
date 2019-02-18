@@ -80,6 +80,7 @@ namespace NewLife.MessageQueue
                 processid = Process.GetCurrentProcess().Id,
                 version = asmx?.Version,
                 compile = asmx?.Compile,
+                clientid = ClientId,
             };
 
             var rs = await base.InvokeWithClientAsync<Object>(client, "MQ/Login", arg);
@@ -131,18 +132,26 @@ namespace NewLife.MessageQueue
         {
             Log.Info("{0} 发布消息 {1}", Name, msg);
 
-            var m = new Message
+            var msg2 = new Message
             {
                 Topic = Topic,
                 //Sender = Name,
                 CreateTime = DateTime.Now,
                 //ExpireTime = DateTime.Now.AddSeconds(60),
-                Body = msg
+                //Body = msg
             };
 
-            var rs = await InvokeAsync<Int64>("MQ/Public", new { msg = m });
+            //var args = msg2.ToJson().GetBytes();
+            var json = JsonWriter.ToJson(msg2, false, false, false);
+            XTrace.WriteLine(json);
+            var args = json.GetBytes();
+            var len = (UInt16)args.Length;
 
-            return rs;
+            var pk = new Packet(len.GetBytes());
+            pk.Append(args);
+            pk.Append(msg);
+
+            return await base.InvokeAsync<Int64>("MQ/Public", pk);
         }
 
         public async Task<Int64> Public(String msg) => await Public(msg.GetBytes());
