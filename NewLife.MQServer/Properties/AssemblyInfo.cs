@@ -31,5 +31,11 @@ using System.Runtime.InteropServices;
 //
 // 可以指定所有值，也可以使用以下所示的 "*" 预置版本号和修订号
 // 方法是按如下所示使用“*”: :
-[assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyFileVersion("1.0.2019.0217")]
+[assembly: AssemblyVersion("2.0.*")]
+[assembly: AssemblyFileVersion("2.0.2019.0217")]
+
+/*
+ * v2.0.2019.0217   轻量级消息队列，采用标准RPC
+ * 
+ * v1.0.2016.0317   创建消息队列，绑定到网络库
+ */

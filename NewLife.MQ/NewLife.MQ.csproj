@@ -8,9 +8,9 @@
     <Copyright>版权所有(C) 新生命开发团队 2002~2019</Copyright>
     <Company>新生命开发团队</Company>
     <Deterministic>false</Deterministic>
-    <AssemblyVersion>1.0.*</AssemblyVersion>
-    <Version>1.0.2019.0217</Version>
-    <FileVersion>1.0.2019.0217</FileVersion>
+    <AssemblyVersion>2.0.*</AssemblyVersion>
+    <Version>2.0.2019.0217</Version>
+    <FileVersion>2.0.2019.0217</FileVersion>
     <RootNamespace>NewLife.MessageQueue</RootNamespace>
     <RepositoryUrl>https://github.com/NewLifeX/NewLife.MQ</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
