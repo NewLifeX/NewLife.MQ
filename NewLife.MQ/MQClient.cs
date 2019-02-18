@@ -126,35 +126,58 @@ namespace NewLife.MessageQueue
 
         #region 收发消息
         /// <summary>发布消息</summary>
-        /// <param name="msg"></param>
+        /// <param name="msg">消息</param>
         /// <returns></returns>
-        public async Task<Int64> Public(Packet msg)
+        public async Task<Int64> Public(Message msg)
         {
             Log.Info("{0} 发布消息 {1}", Name, msg);
 
-            var msg2 = new Message
-            {
-                Topic = Topic,
-                //Sender = Name,
-                CreateTime = DateTime.Now,
-                //ExpireTime = DateTime.Now.AddSeconds(60),
-                //Body = msg
-            };
+            if (msg.Topic.IsNullOrEmpty()) msg.Topic = Topic;
+            if (msg.CreateTime.Year < 2000) msg.CreateTime = DateTime.Now;
 
-            //var args = msg2.ToJson().GetBytes();
-            var json = JsonWriter.ToJson(msg2, false, false, false);
-            XTrace.WriteLine(json);
+            // 消息格式：2长度+N属性+消息数据
+            var json = JsonWriter.ToJson(msg, false, false, false);
             var args = json.GetBytes();
             var len = (UInt16)args.Length;
+#if DEBUG
+            XTrace.WriteLine(json);
+#endif
 
             var pk = new Packet(len.GetBytes());
             pk.Append(args);
-            pk.Append(msg);
+            pk.Append(msg.Body);
 
             return await base.InvokeAsync<Int64>("MQ/Public", pk);
         }
 
-        public async Task<Int64> Public(String msg) => await Public(msg.GetBytes());
+        /// <summary>发布消息</summary>
+        /// <param name="body">消息体</param>
+        /// <param name="tag">标签</param>
+        /// <param name="key">主键</param>
+        /// <returns></returns>
+        public async Task<Int64> Public(Object body, String tag = null, String key = null)
+        {
+            if (!(body is Packet pk))
+            {
+                if (!(body is Byte[] buf))
+                {
+                    if (!(body is String str)) str = body.ToJson();
+
+                    buf = str.GetBytes();
+                }
+                pk = new Packet(buf);
+            }
+
+            var msg = new Message
+            {
+                Body = pk
+            };
+
+            if (!tag.IsNullOrEmpty()) msg.Tag = tag;
+            if (!key.IsNullOrEmpty()) msg.Key = key;
+
+            return await Public(msg);
+        }
         #endregion
     }
 }

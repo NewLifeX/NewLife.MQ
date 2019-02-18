@@ -132,7 +132,7 @@ namespace NewLife.MessageQueue
         [Api(nameof(Public))]
         public Int64 Public(Packet data)
         {
-            // 解析得到消息。2长度+N属性+消息数据
+            // 消息格式：2长度+N属性+消息数据
             var len = data.ReadBytes(0, 2).ToInt();
             var json = data.Slice(2, len).ToStr();
             var body = data.Slice(2 + len);
