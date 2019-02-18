@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Xml.Serialization;
 using NewLife.Data;
+using NewLife.Serialization;
 
 namespace NewLife.MessageQueue
 {
@@ -39,6 +40,40 @@ namespace NewLife.MessageQueue
         #endregion
 
         #region 方法
+        /// <summary>从数据包解析得到消息</summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static Message Read(Packet data)
+        {
+            // 消息格式：2长度+N属性+消息数据
+            var len = data.ReadBytes(0, 2).ToInt();
+            var json = data.Slice(2, len).ToStr();
+            var body = data.Slice(2 + len);
+
+            var msg = json.ToJsonEntity<Message>();
+            msg.Body = body;
+
+            return msg;
+        }
+
+        /// <summary>把消息打包成为数据包</summary>
+        /// <returns></returns>
+        public Packet ToPacket()
+        {
+            // 消息格式：2长度+N属性+消息数据
+            var json = JsonWriter.ToJson(this, false, false, false);
+            var args = json.GetBytes();
+            var len = (UInt16)args.Length;
+#if DEBUG
+            Log.XTrace.WriteLine(json);
+#endif
+
+            var pk = new Packet(len.GetBytes());
+            pk.Append(args);
+            pk.Append(Body);
+
+            return pk;
+        }
         #endregion
 
         #region 辅助

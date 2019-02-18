@@ -18,12 +18,6 @@ namespace NewLife.MessageQueue
         /// <summary>主题</summary>
         public String Topic { get; set; }
 
-        /// <summary>客户端标识</summary>
-        public String ClientId { get; set; }
-
-        /// <summary>消费组</summary>
-        public String Group { get; set; }
-
         /// <summary>用户名</summary>
         public String UserName { get; set; }
 
@@ -41,23 +35,6 @@ namespace NewLife.MessageQueue
         /// <summary>实例化</summary>
         public MQClient()
         {
-            ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";
-        }
-
-        /// <summary>实例化</summary>
-        /// <param name="uri"></param>
-        public MQClient(String uri)
-        {
-            if (!uri.IsNullOrEmpty())
-            {
-                var u = new Uri(uri);
-
-                Servers = new[] { "{2}://{0}:{1}".F(u.Host, u.Port, u.Scheme) };
-
-                var us = u.UserInfo.Split(":");
-                if (us.Length > 0) UserName = us[0];
-                if (us.Length > 1) Password = us[1];
-            }
         }
         #endregion
 
@@ -80,7 +57,6 @@ namespace NewLife.MessageQueue
                 processid = Process.GetCurrentProcess().Id,
                 version = asmx?.Version,
                 compile = asmx?.Compile,
-                clientid = ClientId,
             };
 
             var rs = await base.InvokeWithClientAsync<Object>(client, "MQ/Login", arg);
@@ -92,39 +68,7 @@ namespace NewLife.MessageQueue
         }
         #endregion
 
-        #region 发布订阅
-        ///// <summary>发布主题</summary>
-        ///// <param name="topic"></param>
-        ///// <returns></returns>
-        //public async Task<Boolean> CreateTopic(String topic)
-        //{
-        //    Open();
-
-        //    Log.Info("{0} 创建主题 {1}", Name, topic);
-
-        //    var rs = await Client.InvokeAsync<Boolean>("Topic/Create", new { topic });
-
-        //    return rs;
-        //}
-
-        /// <summary>订阅主题</summary>
-        /// <param name="topic"></param>
-        /// <returns></returns>
-        public async Task<Boolean> Subscribe(String topic)
-        {
-            Open();
-
-            Log.Info("{0} 订阅主题 {1}", Name, topic);
-
-            var rs = await InvokeAsync<Boolean>("MQ/Subscribe", new { topic });
-
-            //if (rs) Client.Register<ClientController>();
-
-            return rs;
-        }
-        #endregion
-
-        #region 收发消息
+        #region 发布
         /// <summary>发布消息</summary>
         /// <param name="msg">消息</param>
         /// <returns></returns>
@@ -135,17 +79,7 @@ namespace NewLife.MessageQueue
             if (msg.Topic.IsNullOrEmpty()) msg.Topic = Topic;
             if (msg.CreateTime.Year < 2000) msg.CreateTime = DateTime.Now;
 
-            // 消息格式：2长度+N属性+消息数据
-            var json = JsonWriter.ToJson(msg, false, false, false);
-            var args = json.GetBytes();
-            var len = (UInt16)args.Length;
-#if DEBUG
-            XTrace.WriteLine(json);
-#endif
-
-            var pk = new Packet(len.GetBytes());
-            pk.Append(args);
-            pk.Append(msg.Body);
+            var pk = msg.ToPacket();
 
             return await base.InvokeAsync<Int64>("MQ/Public", pk);
         }
@@ -177,6 +111,21 @@ namespace NewLife.MessageQueue
             if (!key.IsNullOrEmpty()) msg.Key = key;
 
             return await Public(msg);
+        }
+        #endregion
+
+        #region 消费
+        /// <summary>拉取的批大小。默认32</summary>
+        public Int32 BatchSize { get; set; } = 32;
+
+        public event EventHandler<EventArgs> OnConsume;
+
+        public async Task<Message[]> Pull(Int64 offset, Int32 maxNums, Int32 msTimeout)
+        {
+            var pk = await InvokeAsync<Packet>("MQ/Pull", new { offset, maxNums, msTimeout });
+            if (pk == null || pk.Total == 0) return new Message[0];
+
+            return null;
         }
         #endregion
     }

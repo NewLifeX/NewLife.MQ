@@ -124,20 +124,15 @@ namespace NewLife.MessageQueue
         }
         #endregion
 
-        #region 发布订阅
+        #region 核心方法
         /// <summary>发布消息</summary>
         /// <param name="data"></param>
         /// <returns></returns>
         [Api(nameof(Public))]
         public Int64 Public(Packet data)
         {
-            // 消息格式：2长度+N属性+消息数据
-            var len = data.ReadBytes(0, 2).ToInt();
-            var json = data.Slice(2, len).ToStr();
-            var body = data.Slice(2 + len);
-
-            var msg = json.ToJsonEntity<Message>();
-            msg.Body = body;
+            // 解析消息
+            var msg = Message.Read(data);
 
             var user = Session["User"] as String;
             msg.Sender = user;
@@ -148,6 +143,17 @@ namespace NewLife.MessageQueue
             tp.Send(msg);
 
             return msg.ID;
+        }
+
+        /// <summary>拉取消息</summary>
+        /// <param name="offset"></param>
+        /// <param name="maxNums"></param>
+        /// <param name="msTimeout"></param>
+        /// <returns></returns>
+        [Api(nameof(Pull))]
+        public Packet Pull(Int64 offset, Int32 maxNums, Int32 msTimeout)
+        {
+            return null;
         }
         #endregion
 
