@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
 using NewLife.Log;
 using NewLife.MessageQueue;
-using NewLife.Serialization;
 
 namespace Test
 {
@@ -15,14 +10,31 @@ namespace Test
         {
             XTrace.UseConsole();
 
-            Test1();
+            try
+            {
+                Test1();
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+            }
 
             Console.WriteLine("OK!");
             Console.ReadKey();
         }
 
-        static void Test1()
+        static async void Test1()
         {
+            var client = new MQClient
+            {
+                Servers = new[] { "tcp://127.0.0.1:6789" },
+                Log = XTrace.Log,
+
+                Topic = "Test",
+            };
+
+            var msgid = await client.Public("发布测试");
+            XTrace.WriteLine("msgid={0}", msgid);
         }
 
         static void Test2()
@@ -31,7 +43,7 @@ namespace Test
 
         static void Test3()
         {
-            
+
         }
     }
 }

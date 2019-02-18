@@ -145,7 +145,7 @@ namespace NewLife.MessageQueue
         static async Task OnMessage(Subscriber sb, Message m)
         {
             await TaskEx.Delay(Rand.Next(200));
-            XTrace.WriteLine("{0}=>{3} [{1}]: {2} {4}", m.Sender, m.Tag, m.Content, sb.Host.User, sb.User);
+            XTrace.WriteLine("{0}=>{3} [{1}]: {2} {4}", m.Sender, m.Tag, m.Body, sb.Host.User, sb.User);
         }
     }
 #endif

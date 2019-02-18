@@ -1,12 +1,15 @@
 ﻿using System;
+using NewLife.Data;
 using NewLife.Log;
 using NewLife.Model;
 using NewLife.Net;
 using NewLife.Remoting;
+using NewLife.Serialization;
 
 namespace NewLife.MessageQueue
 {
     /// <summary>消息队列服务</summary>
+    [Api("MQ")]
     public class MQService : IApi, IActionFilter
     {
         #region 属性
@@ -93,7 +96,7 @@ namespace NewLife.MessageQueue
         void IActionFilter.OnActionExecuting(ControllerContext filterContext)
         {
             var act = filterContext.ActionName;
-            if (act == nameof(Login)) return;
+            if (act.EndsWithIgnoreCase("/Login")) return;
 
             if (Session["User"] is String app)
             {
@@ -124,10 +127,19 @@ namespace NewLife.MessageQueue
 
         #region 发布订阅
         /// <summary>发布消息</summary>
-        /// <param name="msg"></param>
+        /// <param name="data"></param>
         /// <returns></returns>
-        public Boolean Public(Message msg)
+        [Api(nameof(Public))]
+        public Int64 Public(Packet data)
         {
+            // 解析得到消息。2长度+N属性+消息数据
+            var len = data.ReadBytes(0, 2).ToInt();
+            var json = data.Slice(2, len).ToStr();
+            var body = data.Slice(2 + len);
+
+            var msg = json.ToJsonEntity<Message>();
+            msg.Body = body;
+
             XTrace.WriteLine("发布消息 {0}", msg);
 
             var user = Session["user"] as String;
@@ -138,7 +150,7 @@ namespace NewLife.MessageQueue
             msg.Sender = user;
             tp.Send(msg);
 
-            return true;
+            return msg.ID;
         }
 
         /// <summary>订阅</summary>

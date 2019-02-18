@@ -78,19 +78,19 @@ namespace NewLife.MessageQueue
             {
                 WriteLog("{0}订阅（{1}, {2}）", user, topic, tag);
 
-                var rs = tp.Add(user, tag, onMessage, userState);
-                // 提示其它订阅者
-                if (rs && Tip)
-                {
-                    var msg = new Message
-                    {
-                        Sender = user,
-                        Topic = topic,
-                        Tag = "Subscribe",
-                        Content = "订阅主题",
-                    };
-                    tp.Send(msg);
-                }
+                //var rs = tp.Add(user, tag, onMessage, userState);
+                //// 提示其它订阅者
+                //if (rs && Tip)
+                //{
+                //    var msg = new Message
+                //    {
+                //        Sender = user,
+                //        Topic = topic,
+                //        Tag = "Subscribe",
+                //        Body = "订阅主题",
+                //    };
+                //    tp.Send(msg);
+                //}
             }
             return tp;
         }
@@ -154,7 +154,7 @@ namespace NewLife.MessageQueue
                 Topic = topic,
                 Sender = user,
                 Tag = tag,
-                Content = content
+                //Body = content
             };
 
             return Send(msg);

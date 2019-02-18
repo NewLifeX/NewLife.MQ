@@ -1,84 +1,93 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
+using NewLife.Data;
 using NewLife.Log;
 using NewLife.Net;
+using NewLife.Reflection;
 using NewLife.Remoting;
+using NewLife.Serialization;
 
 namespace NewLife.MessageQueue
 {
     /// <summary>MQ客户端</summary>
-    public class MQClient : DisposeBase
+    public class MQClient : ApiClient
     {
         #region 属性
-        /// <summary>名称</summary>
-        public String Name { get; set; }
+        /// <summary>主题</summary>
+        public String Topic { get; set; }
 
-        /// <summary>远程地址</summary>
-        public NetUri Remote { get; set; }
+        /// <summary>客户端标识</summary>
+        public String ClientId { get; set; }
 
-        /// <summary>网络客户端</summary>
-        public ApiClient Client { get; set; }
+        /// <summary>消费组</summary>
+        public String Group { get; set; }
 
-        /// <summary>已登录</summary>
-        public Boolean Logined { get; private set; }
+        /// <summary>用户名</summary>
+        public String UserName { get; set; }
+
+        /// <summary>密码</summary>
+        public String Password { get; set; }
+
+        /// <summary>是否已登录</summary>
+        public Boolean Logined { get; set; }
+
+        /// <summary>最后一次登录成功后的消息</summary>
+        public IDictionary<String, Object> Info { get; private set; }
         #endregion
 
         #region 构造函数
         /// <summary>实例化</summary>
         public MQClient()
         {
-            Remote = new NetUri(NetType.Tcp, NetHelper.MyIP(), 2234);
+            ClientId = $"{NetHelper.MyIP()}@{Process.GetCurrentProcess().Id}";
         }
 
-        /// <summary>销毁</summary>
-        /// <param name="disposing"></param>
-        protected override void OnDispose(Boolean disposing)
+        /// <summary>实例化</summary>
+        /// <param name="uri"></param>
+        public MQClient(String uri)
         {
-            base.OnDispose(disposing);
+            if (!uri.IsNullOrEmpty())
+            {
+                var u = new Uri(uri);
 
-            Close(GetType().Name + (disposing ? "Dispose" : "GC"));
+                Servers = new[] { "{2}://{0}:{1}".F(u.Host, u.Port, u.Scheme) };
 
-            Client.TryDispose();
+                var us = u.UserInfo.Split(":");
+                if (us.Length > 0) UserName = us[0];
+                if (us.Length > 1) Password = us[1];
+            }
         }
         #endregion
 
-        #region 打开关闭
-        /// <summary>确保创建客户端</summary>
-        public void EnsureCreate()
+        #region 登录
+        /// <summary>连接后自动登录</summary>
+        /// <param name="client">客户端</param>
+        /// <param name="force">强制登录</param>
+        protected override async Task<Object> OnLoginAsync(ISocketClient client, Boolean force)
         {
-            var ac = Client;
-            if (ac == null || ac.Disposed)
+            if (Logined && !force) return null;
+
+            var asmx = AssemblyX.Entry;
+            if (UserName.IsNullOrEmpty()) UserName = asmx?.Name;
+
+            var arg = new
             {
-                ac = new ApiClient(Remote + "");
-                ac.Encoder = new JsonEncoder();
-                ac.Log = Log;
-#if DEBUG
-                //ac.Client.Log = Log;
-                ac.EncoderLog = Log;
-#endif
+                user = UserName,
+                pass = Password.MD5(),
+                machine = Environment.MachineName,
+                processid = Process.GetCurrentProcess().Id,
+                version = asmx?.Version,
+                compile = asmx?.Compile,
+            };
 
-                ac["user"] = Name;
+            var rs = await base.InvokeWithClientAsync<Object>(client, "MQ/Login", arg);
+            if (Setting.Current.Debug) XTrace.WriteLine("登录{0}成功！{1}", client, rs.ToJson());
 
-                Client = ac;
-            }
-        }
+            Logined = true;
 
-        /// <summary>打开</summary>
-        public void Open()
-        {
-            var ac = Client;
-            if (ac != null && !ac.Disposed)
-            {
-                Logined = false;
-
-                ac?.Open();
-            }
-        }
-
-        /// <summary>关闭</summary>
-        public void Close(String reason)
-        {
-            Client.Close(reason ?? (GetType().Name + "Close"));
+            return Info = rs as IDictionary<String, Object>;
         }
         #endregion
 
@@ -106,7 +115,7 @@ namespace NewLife.MessageQueue
 
             Log.Info("{0} 订阅主题 {1}", Name, topic);
 
-            var rs = await Client.InvokeAsync<Boolean>("Topic/Subscribe", new { topic });
+            var rs = await InvokeAsync<Boolean>("MQ/Subscribe", new { topic });
 
             //if (rs) Client.Register<ClientController>();
 
@@ -118,29 +127,25 @@ namespace NewLife.MessageQueue
         /// <summary>发布消息</summary>
         /// <param name="msg"></param>
         /// <returns></returns>
-        public async Task<Boolean> Public(Object msg)
+        public async Task<Int64> Public(Packet msg)
         {
-            Open();
-
             Log.Info("{0} 发布消息 {1}", Name, msg);
 
             var m = new Message
             {
-                Sender = Name,
-                StartTime = DateTime.Now,
-                EndTime = DateTime.Now.AddSeconds(60),
-                Content = msg
+                Topic = Topic,
+                //Sender = Name,
+                CreateTime = DateTime.Now,
+                //ExpireTime = DateTime.Now.AddSeconds(60),
+                Body = msg
             };
 
-            var rs = await Client.InvokeAsync<Boolean>("Message/Public", new { msg = m });
+            var rs = await InvokeAsync<Int64>("MQ/Public", new { msg = m });
 
             return rs;
         }
-        #endregion
 
-        #region 日志
-        /// <summary>日志</summary>
-        public ILog Log { get; set; } = Logger.Null;
+        public async Task<Int64> Public(String msg) => await Public(msg.GetBytes());
         #endregion
     }
 }
