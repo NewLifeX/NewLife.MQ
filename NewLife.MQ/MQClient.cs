@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using NewLife.Data;
 using NewLife.Log;
@@ -124,6 +125,18 @@ namespace NewLife.MessageQueue
         {
             var pk = await InvokeAsync<Packet>("MQ/Pull", new { offset, maxNums, msTimeout });
             if (pk == null || pk.Total == 0) return new Message[0];
+
+            var ms = pk.GetStream();
+            var reader = new BinaryReader(ms);
+            var count = reader.ReadInt16();
+
+            var list = new List<Message>();
+            while (count-- > 0)
+            {
+                var pk2 = pk.Slice((Int32)ms.Position);
+                var msg = Message.Read(pk, reader);
+                list.Add(msg);
+            }
 
             return null;
         }

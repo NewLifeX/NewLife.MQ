@@ -3,7 +3,6 @@ using NewLife.Data;
 using NewLife.Log;
 using NewLife.Net;
 using NewLife.Remoting;
-using NewLife.Serialization;
 
 namespace NewLife.MessageQueue
 {
@@ -132,7 +131,7 @@ namespace NewLife.MessageQueue
         public Int64 Public(Packet data)
         {
             // 解析消息
-            var msg = Message.Read(data);
+            var msg = Message.Read(data, null);
 
             var user = Session["User"] as String;
             msg.Sender = user;

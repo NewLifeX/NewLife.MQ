@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Xml.Serialization;
 using NewLife.Data;
 using NewLife.Serialization;
@@ -42,16 +43,20 @@ namespace NewLife.MessageQueue
         #region 方法
         /// <summary>从数据包解析得到消息</summary>
         /// <param name="data"></param>
+        /// <param name="reader"></param>
         /// <returns></returns>
-        public static Message Read(Packet data)
+        public static Message Read(Packet data, BinaryReader reader)
         {
+            if (reader == null) reader = new BinaryReader(data.GetStream());
+
             // 消息格式：2长度+N属性+消息数据
-            var len = data.ReadBytes(0, 2).ToInt();
-            var json = data.Slice(2, len).ToStr();
-            var body = data.Slice(2 + len);
+            var len = reader.ReadInt16();
+            var json = reader.ReadBytes(len).ToStr();
 
             var msg = json.ToJsonEntity<Message>();
-            msg.Body = body;
+
+            var len2 = reader.ReadInt16();
+            msg.Body = data.Slice(2 + len + 2, len2);
 
             return msg;
         }
@@ -63,13 +68,16 @@ namespace NewLife.MessageQueue
             // 消息格式：2长度+N属性+消息数据
             var json = JsonWriter.ToJson(this, false, false, false);
             var args = json.GetBytes();
-            var len = (UInt16)args.Length;
+            var len = (Int16)args.Length;
 #if DEBUG
             Log.XTrace.WriteLine(json);
 #endif
 
             var pk = new Packet(len.GetBytes());
             pk.Append(args);
+
+            len = (Int16)Body.Total;
+            pk.Append(len.GetBytes());
             pk.Append(Body);
 
             return pk;
