@@ -174,7 +174,7 @@ namespace NewLife.MessageQueue
                 var end = DateTime.Now.AddMilliseconds(msTimeout);
                 do
                 {
-                    Thread.Sleep(100);
+                    Thread.Sleep(10);
 
                     list = Host.Pull(user, topic, maxNums);
                     if (list != null && list.Count > 0) break;

@@ -163,7 +163,7 @@ namespace NewLife.MessageQueue
                     {
                         //Timeout = 15_000;
 
-                        _timer = new TimerX(DoSchedule, null, 0, 5_000, "MQ") { Async = true };
+                        _timer = new TimerX(DoSchedule, null, 100, 5_000, "MQ") { Async = true };
                     }
                 }
             }

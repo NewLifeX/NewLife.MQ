@@ -3,38 +3,41 @@ NewLife.MQ 是一个轻量级消息队列，无延迟分发，支持消费组和
 
 主要特点：  
 + 轻量级。服务端和客户端都是通过`nuget`引用`NewLife.MQ`即可，也可以在Windows上直接安装发行版`NewLife.MQServer`。  
-+ 无延迟。默认不做持久化，发布消息后直接分发到目标队列，客户端长连接实时消费。（特别适用于跨系统异步通信）  
++ 低延迟。默认不做持久化，发布消息后直接分发到目标队列，客户端长连接实时消费。（特别适用于跨系统异步通信）  
 + 消费者。支持广播消息给多个消费者。  
 + 消息延迟和去重。支持延迟消息，支持对重复发送的消息进行去重，降低消费成本。  
 
+### 2019-02-20 v2.0混合测试通过  
+1, 实现了基础的发送与消费  
+2, 每个Topic下有一个队列，目前使用并行字典实现，自增消息ID为key，便于查找和删除
+3, 每个消费组（相同登录用户）记录消费偏移量
 
 
 ```csharp
-public static async Task Main2()
+// 初始化客户端
+var client = new MQClient
 {
-    var host = new MQHost();
-    host.Log = XTrace.Log;
-    host.Tip = true;
+    Servers = new[] { "tcp://127.0.0.1:6789" },
+    Log = XTrace.Log,
 
-    host.Subscribe("aaa", "ttt", null, OnMessage);
-    host.Subscribe("bbb", "ttt", "t1||t2", OnMessage);
-    host.Subscribe("ccc", "ttt", "t1||t3", OnMessage, 111);
-    host.Subscribe("ccc", "ttt", "t1||t3", OnMessage, 222);
+    Topic = "测试主题",
+};
 
-    var tags = "t1,t2,t3,t4".Split(",");
-    for (int i = 0; i < 1000; i++)
+// 发布消息
+var msgid = client.Public("发布测试").Result;
+XTrace.WriteLine("msgid={0}", msgid);
+
+// 消费消息
+client.OnConsume = msgs =>
+{
+    foreach (var item in msgs)
     {
-        Console.WriteLine();
-        host.Send("大石头", "ttt", tags[Rand.Next(tags.Length)], Rand.NextString(16));
-        Thread.Sleep(1000);
+        XTrace.WriteLine("消费到 {0}", item);
     }
-}
 
-static async Task OnMessage(Subscriber sb, Message m)
-{
-    await Task.Delay(Rand.Next(200));
-    XTrace.WriteLine("{0}=>{3} [{1}]: {2} {4}", m.Sender, m.Tag, m.Content, sb.Host.User, sb.User);
-}
+    return msgs.Max(e => e.ID);
+};
+client.StartConsume();
 ```
 
 主要术语：
@@ -48,7 +51,7 @@ static async Task OnMessage(Subscriber sb, Message m)
 
 | 项目 | 年份 | 状态 | .NET Core | 说明 |
 | :------: | :------: | :------: | :------: | ------ |
-| [NewLife.Core](https://github.com/NewLifeX/X) | 2002 | 维护中 | √ | 日志、网络、RPC、序列化、缓存、Windows服务、多线程 |
+| [NewLife.Core](https://github.com/NewLifeX/X) | 2002 | 维护中 | √ | 日志、网络、RPC、序列化、缓存、多线程 |
 | [XCode](https://github.com/NewLifeX/X) | 2005 | 维护中 | √ | 数据中间件，MySQL、SQLite、SqlServer、Oracle |
 | [NewLife.Cube](https://github.com/NewLifeX/NewLife.Cube) | 2010 | 维护中 | √ | Web魔方，权限基础框架，集成OAuth |
 | [NewLife.Net](https://github.com/NewLifeX/NewLife.Net) | 2005 | 维护中 | √ | 网络库，千万级吞吐率，学习gRPC、Thrift |
@@ -62,13 +65,13 @@ static async Task OnMessage(Subscriber sb, Message m)
 | [NewLife.CMX](https://github.com/NewLifeX/NewLife.CMX) | 2013 | 维护中 | × | 内容管理系统 |
 | [SmartOS](https://github.com/NewLifeX/SmartOS) | 2014 | 保密中 | C++11 | 嵌入式操作系统，面向ARM Cortex-M芯片架构 |
 | [GitCandy](https://github.com/NewLifeX/GitCandy) | 2015 | 维护中 | × | Git管理系统 |
-| [XLink](https://github.com/NewLifeX/XLink) | 2016 | 保密中 | √ | 物联网云平台 |
+| [XLink](https://github.com/NewLifeX/XLink) | 2016 | 维护中 | √ | 物联网云平台 |
 | [NoDb](https://github.com/NewLifeX/NoDb) | 2017 | 开发中 | √ | NoSQL数据库，百万级读写性能，学习Redis+MongoDB |
 | [NewLife.Redis](https://github.com/NewLifeX/NewLife.Redis) | 2017 | 维护中 | √ | Redis客户端，微秒级延迟，百亿级项目验证 |
 | [NewLife.MySql](https://github.com/NewLifeX/NewLife.MySql) | 2018 | 开发中 | √ | MySql驱动 |
 | [NewLife.Cache](https://github.com/NewLifeX/NewLife.Cache) | 2018 | 维护中 | √ | 自定义缓存服务器 |
 | [NewLife.RocketMQ](https://github.com/NewLifeX/NewLife.RocketMQ) | 2018 | 维护中 | √ | 支持Apache RocketMQ和阿里云消息队列 |
-| [NewLife.MQ](https://github.com/NewLifeX/NewLife.MQ) | 2019 | 开发中 | √ | 轻量级消息队列 |
+| [NewLife.MQ](https://github.com/NewLifeX/NewLife.MQ) | 2016 | 维护中 | √ | 轻量级消息队列 |
 | NewLife.Kafka | 2019 | 设计中 | √ | Kafka组件 |
 | ConfigServer | 2019 | 设计中 | √ | 分布式配置中心，学习Apollo |
 | [X组件 .NET2.0](https://github.com/NewLifeX/X_NET20) | 2002 | 存档中 | .NET2.0 | 日志、网络、RPC、序列化、缓存、Windows服务、多线程 |
