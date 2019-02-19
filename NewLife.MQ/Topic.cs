@@ -73,7 +73,7 @@ namespace NewLife.MessageQueue
         }
         #endregion
 
-        #region 进入队列
+        #region 收发消息
         private Int64 _gid;
 
         /// <summary>进入队列</summary>
@@ -110,6 +110,11 @@ namespace NewLife.MessageQueue
 
             return count;
         }
+
+        /// <summary>获取消息</summary>
+        /// <param name="msgid"></param>
+        /// <returns></returns>
+        public Message Get(Int64 msgid) => Queue.TryGetValue(msgid, out var msg) ? msg : null;
 
         private TimerX _timer;
         private void DoCheckQueue(Object state)

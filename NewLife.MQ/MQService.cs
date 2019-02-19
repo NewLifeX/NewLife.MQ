@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Threading;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Net;
 using NewLife.Remoting;
-using NewLife.Security;
 
 namespace NewLife.MessageQueue
 {
@@ -145,22 +145,38 @@ namespace NewLife.MessageQueue
         }
 
         /// <summary>长连接拉取消息</summary>
-        /// <param name="offset"></param>
+        /// <param name="topic"></param>
         /// <param name="maxNums"></param>
         /// <param name="msTimeout"></param>
         /// <returns></returns>
         [Api(nameof(Pull))]
-        public Packet Pull(Int64 offset, Int32 maxNums, Int32 msTimeout)
+        public Packet Pull(String topic, Int32 maxNums, Int32 msTimeout)
         {
-            //todo 待填充拉取消息
-            var list = new Message[16];
-            for (var i = 0; i < list.Length; i++)
+            ////todo 待填充拉取消息
+            //var list = new Message[16];
+            //for (var i = 0; i < list.Length; i++)
+            //{
+            //    list[i] = new Message { BodyString = Rand.NextString(16) };
+            //}
+
+            var user = Session["User"] as String;
+            var list = Host.Pull(user, topic, maxNums);
+
+            // 如果没有消息，则阻塞等待
+            if (list == null || list.Count == 0)
             {
-                list[i] = new Message { BodyString = Rand.NextString(16) };
+                var end = DateTime.Now.AddMilliseconds(msTimeout);
+                do
+                {
+                    Thread.Sleep(100);
+
+                    list = Host.Pull(user, topic, maxNums);
+                    if (list != null && list.Count > 0) break;
+                } while (DateTime.Now < end);
             }
 
             // 写入个数后，链式输出
-            var count = (Int16)list.Length;
+            var count = (Int16)list.Count;
             var pk = new Packet(count.GetBytes());
 
             foreach (var item in list)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using NewLife.Log;
 
 namespace NewLife.MessageQueue
@@ -56,7 +57,7 @@ namespace NewLife.MessageQueue
         }
         #endregion
 
-        #region 发布管理
+        #region 发布
         /// <summary>单向发送。不需要反馈</summary>
         /// <param name="msg">消息</param>
         public Int32 Send(Message msg)
@@ -83,6 +84,22 @@ namespace NewLife.MessageQueue
             };
 
             return Send(msg);
+        }
+        #endregion
+
+        #region 消费
+        /// <summary>拉取消息</summary>
+        /// <param name="user"></param>
+        /// <param name="topic"></param>
+        /// <param name="maxNums"></param>
+        /// <returns></returns>
+        public IList<Message> Pull(String user, String topic, Int32 maxNums)
+        {
+            var tp = Get(topic, true);
+            if (tp == null) throw new ArgumentNullException(nameof(topic), "找不到主题");
+
+            var cs = tp.GetConsumer(user, null);
+            return cs.Pull(maxNums);
         }
         #endregion
 
