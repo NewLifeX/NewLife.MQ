@@ -101,6 +101,20 @@ namespace NewLife.MessageQueue
             var cs = tp.GetConsumer(user, null);
             return cs.Pull(maxNums);
         }
+
+        /// <summary>确认偏移量</summary>
+        /// <param name="user"></param>
+        /// <param name="topic"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public Int64 Commit(String user, String topic, Int64 offset)
+        {
+            var tp = Get(topic, false);
+            if (tp == null) throw new ArgumentNullException(nameof(topic), "找不到主题");
+
+            var cs = tp.GetConsumer(user, null);
+            return cs.CommitOffset = offset;
+        }
         #endregion
 
         #region 日志

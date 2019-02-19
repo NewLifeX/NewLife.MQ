@@ -72,7 +72,7 @@ namespace NewLife.MessageQueue
             var args = json.GetBytes();
             var len = (Int16)args.Length;
 #if DEBUG
-            Log.XTrace.WriteLine(json);
+            //Log.XTrace.WriteLine(json);
 #endif
 
             var pk = new Packet(len.GetBytes());

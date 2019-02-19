@@ -137,7 +137,9 @@ namespace NewLife.MessageQueue
             var user = Session["User"] as String;
             msg.Sender = user;
 
-            //XTrace.WriteLine("发布消息 {0}", msg);
+#if DEBUG
+            XTrace.WriteLine("[{0}]发布 {1}", user, msg);
+#endif
 
             Host.Send(msg);
 
@@ -160,6 +162,10 @@ namespace NewLife.MessageQueue
             //}
 
             var user = Session["User"] as String;
+
+#if DEBUG
+            XTrace.WriteLine("[{0}]拉取 {1}", user, maxNums);
+#endif
             var list = Host.Pull(user, topic, maxNums);
 
             // 如果没有消息，则阻塞等待
@@ -174,6 +180,7 @@ namespace NewLife.MessageQueue
                     if (list != null && list.Count > 0) break;
                 } while (DateTime.Now < end);
             }
+            if (list == null || list.Count == 0) return null;
 
             // 写入个数后，链式输出
             var count = (Int16)list.Count;
@@ -186,6 +193,21 @@ namespace NewLife.MessageQueue
             }
 
             return pk;
+        }
+
+        /// <summary>确认偏移量</summary>
+        /// <param name="topic"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        [Api(nameof(Commit))]
+        public Int64 Commit(String topic, Int64 offset)
+        {
+            var user = Session["User"] as String;
+
+#if DEBUG
+            XTrace.WriteLine("[{0}]提交 {1}", user, offset);
+#endif
+            return Host.Commit(user, topic, offset);
         }
         #endregion
 

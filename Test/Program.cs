@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using NewLife.Log;
 using NewLife.MessageQueue;
@@ -14,7 +15,11 @@ namespace Test
 
             try
             {
-                Test1();
+                Console.Write("模式（1生产者，2消费者）：");
+                if (Console.ReadLine() == "1")
+                    Test1();
+                else
+                    Test2();
             }
             catch (Exception ex)
             {
@@ -32,26 +37,44 @@ namespace Test
                 Servers = new[] { "tcp://127.0.0.1:6789" },
                 Log = XTrace.Log,
 
-                Topic = "Test",
+                Topic = "测试主题",
             };
 
             var msgid = await client.Public("发布测试");
             XTrace.WriteLine("msgid={0}", msgid);
 
-            for (var i = 0; i < 10; i++)
+            do
             {
-                Thread.Sleep(200);
+                for (var i = 0; i < 10; i++)
+                {
+                    Thread.Sleep(200);
 
-                msgid = await client.Public(Rand.NextString(16));
-                XTrace.WriteLine("msgid={0}", msgid);
-            }
-
-            var msgs = await client.Pull(0, 32, 15_000);
-            Console.WriteLine(msgs);
+                    msgid = await client.Public(Rand.NextString(16));
+                    XTrace.WriteLine("msgid={0}", msgid);
+                }
+            } while (Console.ReadKey(false).Key == ConsoleKey.C);
         }
 
         static void Test2()
         {
+            var client = new MQClient
+            {
+                Servers = new[] { "tcp://127.0.0.1:6789" },
+                Log = XTrace.Log,
+
+                Topic = "测试主题",
+            };
+
+            client.OnConsume = msgs =>
+            {
+                foreach (var item in msgs)
+                {
+                    XTrace.WriteLine("消费到 {0}", item);
+                }
+
+                return msgs.Max(e => e.ID);
+            };
+            client.StartConsume();
         }
 
         static void Test3()

@@ -9,6 +9,7 @@ using NewLife.Net;
 using NewLife.Reflection;
 using NewLife.Remoting;
 using NewLife.Serialization;
+using NewLife.Threading;
 
 namespace NewLife.MessageQueue
 {
@@ -119,17 +120,16 @@ namespace NewLife.MessageQueue
         /// <summary>拉取的批大小。默认32</summary>
         public Int32 BatchSize { get; set; } = 32;
 
-        /// <summary>消费事件</summary>
-        public event EventHandler<EventArgs> OnConsume;
+        /// <summary>消费一批消息，返回待确认偏移</summary>
+        public Func<Message[], Int64> OnConsume;
 
         /// <summary>拉取消息。长连接阻塞操作，确保实时性</summary>
-        /// <param name="offset"></param>
         /// <param name="maxNums"></param>
         /// <param name="msTimeout"></param>
         /// <returns></returns>
-        public async Task<Message[]> Pull(Int64 offset, Int32 maxNums, Int32 msTimeout)
+        public async Task<Message[]> Pull(Int32 maxNums, Int32 msTimeout)
         {
-            var pk = await InvokeAsync<Packet>("MQ/Pull", new { offset, maxNums, msTimeout });
+            var pk = await InvokeAsync<Packet>("MQ/Pull", new { Topic, maxNums, msTimeout });
             if (pk == null || pk.Total == 0) return new Message[0];
 
             var ms = pk.GetStream();
@@ -145,6 +145,42 @@ namespace NewLife.MessageQueue
             }
 
             return list.ToArray();
+        }
+
+        /// <summary>提交偏移量</summary>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        public async Task<Int64> Commit(Int64 offset) => await InvokeAsync<Int64>("MQ/Commit", new { Topic, offset });
+
+        /// <summary>开始消费</summary>
+        public void StartConsume()
+        {
+            if (_timer == null)
+            {
+                lock (this)
+                {
+                    if (_timer == null)
+                    {
+                        //Timeout = 15_000;
+
+                        _timer = new TimerX(DoSchedule, null, 0, 5_000, "MQ") { Async = true };
+                    }
+                }
+            }
+        }
+
+        private TimerX _timer;
+        private void DoSchedule(Object state)
+        {
+            var msgs = Pull(BatchSize, 10_000).Result;
+            if (msgs != null && msgs.Length > 0)
+            {
+                var offset = OnConsume.Invoke(msgs);
+                if (offset > 0) Commit(offset).Wait();
+            }
+
+            // 马上开始下一次
+            TimerX.Current.SetNext(-1);
         }
         #endregion
     }

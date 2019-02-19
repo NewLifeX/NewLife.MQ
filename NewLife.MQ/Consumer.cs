@@ -17,7 +17,7 @@ namespace NewLife.MessageQueue
         public String Tag { get; set; }
 
         /// <summary>偏移量。消费位置</summary>
-        public Int64 Offset { get; set; }
+        public Int64 Offset { get; set; } = 1;
 
         /// <summary>确认偏移量。已确认的消费位置</summary>
         public Int64 CommitOffset { get; set; }
@@ -40,11 +40,11 @@ namespace NewLife.MessageQueue
         /// <returns></returns>
         public IList<Message> Pull(Int32 maxNums)
         {
+            var tp = Topic;
+            if (tp.Count <= 0 || Offset > tp.MaxOffset) return null;
+
             lock (this)
             {
-                var tp = Topic;
-                if (tp.Count <= 0 || Offset >= tp.MaxOffset) return null;
-
                 var list = new List<Message>();
                 while (maxNums > 0)
                 {
