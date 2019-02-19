@@ -34,8 +34,6 @@ client.OnConsume = msgs =>
     {
         XTrace.WriteLine("消费到 {0}", item);
     }
-
-    return msgs.Max(e => e.ID);
 };
 client.StartConsume();
 ```

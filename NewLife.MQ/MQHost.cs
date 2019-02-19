@@ -113,7 +113,9 @@ namespace NewLife.MessageQueue
             if (tp == null) throw new ArgumentNullException(nameof(topic), "找不到主题");
 
             var cs = tp.GetConsumer(user, null);
-            return cs.CommitOffset = offset;
+            if (cs.CommitOffset < offset) cs.CommitOffset = offset;
+
+            return cs.CommitOffset;
         }
         #endregion
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using NewLife.Data;
 using NewLife.Log;
@@ -120,8 +121,8 @@ namespace NewLife.MessageQueue
         /// <summary>拉取的批大小。默认32</summary>
         public Int32 BatchSize { get; set; } = 32;
 
-        /// <summary>消费一批消息，返回待确认偏移</summary>
-        public Func<Message[], Int64> OnConsume;
+        /// <summary>消费一批消息，无异常时自动提交确认</summary>
+        public Action<Message[]> OnConsume;
 
         /// <summary>拉取消息。长连接阻塞操作，确保实时性</summary>
         /// <param name="maxNums"></param>
@@ -175,8 +176,14 @@ namespace NewLife.MessageQueue
             var msgs = Pull(BatchSize, 10_000).Result;
             if (msgs != null && msgs.Length > 0)
             {
-                var offset = OnConsume.Invoke(msgs);
-                if (offset > 0) Commit(offset).Wait();
+                try
+                {
+                    OnConsume.Invoke(msgs);
+
+                    var maxid = msgs.Max(e => e.ID);
+                    Commit(maxid).Wait();
+                }
+                catch (Exception ex) { XTrace.WriteException(ex); }
             }
 
             // 马上开始下一次
