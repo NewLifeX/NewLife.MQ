@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.ComponentModel;
-using System.Threading.Tasks;
 using NewLife.Log;
 
 namespace NewLife.MessageQueue
@@ -47,8 +45,8 @@ namespace NewLife.MessageQueue
             {
                 return Topics.GetOrAdd(topic, s =>
                 {
-                    WriteLog("创建主题 {0}", topic);
-                    return new Topic(this, topic);
+                    WriteLog("创建主题 {0}", s);
+                    return new Topic(this, s);
                 });
             }
 

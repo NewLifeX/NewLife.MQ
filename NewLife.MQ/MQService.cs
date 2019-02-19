@@ -137,10 +137,9 @@ namespace NewLife.MessageQueue
             var user = Session["User"] as String;
             msg.Sender = user;
 
-            XTrace.WriteLine("发布消息 {0}", msg);
+            //XTrace.WriteLine("发布消息 {0}", msg);
 
-            var tp = Host.Get(msg.Topic, true);
-            tp.Send(msg);
+            Host.Send(msg);
 
             return msg.ID;
         }

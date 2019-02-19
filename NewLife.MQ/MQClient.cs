@@ -122,6 +122,11 @@ namespace NewLife.MessageQueue
         /// <summary>消费事件</summary>
         public event EventHandler<EventArgs> OnConsume;
 
+        /// <summary>拉取消息。长连接阻塞操作，确保实时性</summary>
+        /// <param name="offset"></param>
+        /// <param name="maxNums"></param>
+        /// <param name="msTimeout"></param>
+        /// <returns></returns>
         public async Task<Message[]> Pull(Int64 offset, Int32 maxNums, Int32 msTimeout)
         {
             var pk = await InvokeAsync<Packet>("MQ/Pull", new { offset, maxNums, msTimeout });
