@@ -30,7 +30,7 @@ namespace Test
             Console.ReadKey();
         }
 
-        static async void Test1()
+        static void Test1()
         {
             var client = new MQClient
             {
@@ -40,19 +40,22 @@ namespace Test
                 Topic = "测试主题",
             };
 
-            var msgid = await client.Public("发布测试");
+            var msgid = client.Public("发布测试").Result;
             XTrace.WriteLine("msgid={0}", msgid);
 
-            do
+            while (true)
             {
                 for (var i = 0; i < 10; i++)
                 {
                     Thread.Sleep(200);
 
-                    msgid = await client.Public(Rand.NextString(16));
+                    msgid = client.Public(Rand.NextString(16)).Result;
                     XTrace.WriteLine("msgid={0}", msgid);
                 }
-            } while (Console.ReadKey(false).Key == ConsoleKey.C);
+
+                var key = Console.ReadKey(true);
+                if (key.Key != ConsoleKey.C) break;
+            }
         }
 
         static void Test2()
