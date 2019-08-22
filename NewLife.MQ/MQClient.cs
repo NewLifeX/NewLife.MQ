@@ -75,7 +75,7 @@ namespace NewLife.MessageQueue
         /// <summary>发布消息</summary>
         /// <param name="msg">消息</param>
         /// <returns></returns>
-        public async Task<Int64> Public(Message msg)
+        public async Task<Int64> PublicAsync(Message msg)
         {
             Log.Info("{0} 发布消息 {1}", Name, msg);
 
@@ -92,7 +92,7 @@ namespace NewLife.MessageQueue
         /// <param name="tag">标签</param>
         /// <param name="key">主键</param>
         /// <returns></returns>
-        public async Task<Int64> Public(Object body, String tag = null, String key = null)
+        public async Task<Int64> PublicAsync(Object body, String tag = null, String key = null)
         {
             if (!(body is Packet pk))
             {
@@ -113,7 +113,7 @@ namespace NewLife.MessageQueue
             if (!tag.IsNullOrEmpty()) msg.Tag = tag;
             if (!key.IsNullOrEmpty()) msg.Key = key;
 
-            return await Public(msg);
+            return await PublicAsync(msg);
         }
         #endregion
 

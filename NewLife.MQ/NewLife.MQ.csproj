@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net45;netstandard2.0;net40</TargetFrameworks>
     <AssemblyName>NewLife.MQ</AssemblyName>
     <AssemblyTitle>轻量级消息队列</AssemblyTitle>
     <Description>轻量级消息队列，无延迟分发，支持消费组和消息去重，不支持集群部署</Description>

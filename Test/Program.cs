@@ -40,7 +40,7 @@ namespace Test
                 Topic = "测试主题",
             };
 
-            var msgid = client.Public("发布测试").Result;
+            var msgid = client.PublicAsync("发布测试").Result;
             XTrace.WriteLine("msgid={0}", msgid);
 
             while (true)
@@ -49,7 +49,7 @@ namespace Test
                 {
                     Thread.Sleep(200);
 
-                    msgid = client.Public(Rand.NextString(16)).Result;
+                    msgid = client.PublicAsync(Rand.NextString(16)).Result;
                     XTrace.WriteLine("msgid={0}", msgid);
                 }
 
