@@ -37,17 +37,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="8.3.2019.822" />
+    <PackageReference Include="NewLife.Agent" Version="8.4.2019.1109" />
+    <PackageReference Include="NewLife.Core" Version="8.4.2019.1109" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\NewLife.MQ\NewLife.MQ.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
-    <PackageReference Include="NewLife.Agent">
-      <Version>8.3.2019.822</Version>
-    </PackageReference>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net45' or '$(TargetFramework)'=='net40'">
